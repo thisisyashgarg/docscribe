@@ -12,7 +12,7 @@ const COUNTRY_CODES = [
 ];
 
 /* ---------- Skeleton Loader ---------- */
-function SkeletonBlock({ lines = 3 }) {
+function SkeletonBlock({ lines = 3 }: { lines?: number }) {
   return (
     <div className="space-y-3">
       {Array.from({ length: lines }).map((_, i) => (
@@ -26,8 +26,15 @@ function SkeletonBlock({ lines = 3 }) {
   );
 }
 
+interface SummarySectionProps {
+  icon: string;
+  title: string;
+  items: string[];
+  delay: number;
+}
+
 /* ---------- Summary Section Card ---------- */
-function SummarySection({ icon, title, items, delay }) {
+function SummarySection({ icon, title, items, delay }: SummarySectionProps) {
   return (
     <div
       className="rounded-2xl border border-border-light bg-paper p-5 animate-fade-in-up"
@@ -51,11 +58,22 @@ function SummarySection({ icon, title, items, delay }) {
   );
 }
 
+export interface SummaryData {
+  symptoms: string[];
+  diagnosis: string[];
+  prescription: string[];
+}
+
+export interface SummaryPanelProps {
+  status: "idle" | "processing" | "ready";
+  summaryData: SummaryData | null;
+}
+
 /* ---------- Main Component ---------- */
-export default function SummaryPanel({ status, summaryData }) {
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
+export default function SummaryPanel({ status, summaryData }: SummaryPanelProps) {
+  const [countryCode, setCountryCode] = useState<string>("+91");
+  const [phone, setPhone] = useState<string>("");
+  const [phoneError, setPhoneError] = useState<string>("");
   const [sent, setSent] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -219,7 +237,7 @@ export default function SummaryPanel({ status, summaryData }) {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setPhone(e.target.value);
                   setPhoneError("");
                   setSent(false);

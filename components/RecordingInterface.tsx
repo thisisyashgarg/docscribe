@@ -2,23 +2,29 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 
-export default function RecordingInterface({ onRecordingComplete }) {
-  const [status, setStatus] = useState("idle"); // idle | recording | stopped
+export interface RecordingInterfaceProps {
+  onRecordingComplete?: (blob: Blob) => void;
+}
+
+export default function RecordingInterface({ onRecordingComplete }: RecordingInterfaceProps) {
+  const [status, setStatus] = useState<"idle" | "recording" | "stopped">("idle");
   const [timer, setTimer] = useState(0);
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const timerRef = useRef(null);
-  const streamRef = useRef(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Timer tick
   useEffect(() => {
     if (status === "recording") {
       timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
     }
-    return () => clearInterval(timerRef.current);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [status]);
 
-  const formatTime = (s) => {
+  const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
       .toString()
       .padStart(2, "0");
@@ -34,7 +40,7 @@ export default function RecordingInterface({ onRecordingComplete }) {
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
 
-      mr.ondataavailable = (e) => {
+      mr.ondataavailable = (e: BlobEvent) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
