@@ -124,6 +124,43 @@ export default function RecordingInterface({ onRecordingComplete }: RecordingInt
         </button>
       </div>
 
+      {/* Upload Option */}
+      {status === "idle" || status === "stopped" ? (
+        <div className="mb-8 animate-fade-in-up">
+          <input
+            type="file"
+            id="audio-upload"
+            accept="audio/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onRecordingComplete?.(file);
+            }}
+          />
+          <label
+            htmlFor="audio-upload"
+            className="group flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-text-primary transition-all hover:border-saffron hover:bg-saffron-light/30 cursor-pointer"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-indigo-deep group-hover:text-saffron"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" x2="12" y1="3" y2="15" />
+            </svg>
+            Upload Audio File
+          </label>
+        </div>
+      ) : null}
+
       {/* Timer / Status */}
       {status === "recording" ? (
         <div className="mb-6 flex flex-col items-center gap-3 animate-fade-in-up">
@@ -164,7 +201,7 @@ export default function RecordingInterface({ onRecordingComplete }: RecordingInt
       <div className="mt-auto flex items-center gap-2 rounded-2xl bg-paper-warm px-5 py-3">
         <span className="text-lg">🗣️</span>
         <p className="text-xs text-text-secondary">
-          Speak naturally in <b>Hindi</b> or <b>English</b>
+          Speak naturally or <b>upload</b> your conversation
         </p>
       </div>
     </div>
