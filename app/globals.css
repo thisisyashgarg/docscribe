@@ -22,8 +22,8 @@
   --color-red-glow: #EF4444;
 
   /* Sarvam AI Typography & Layout */
-  --font-sans: var(--font-sans);
-  --font-serif: var(--font-playfair), "Season Mix", Georgia, serif;
+  --font-sans: var(--font-dm-sans), "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-dm-serif), "DM Serif Display", Georgia, serif;
 
   --radius-bento: 24px;
   --shadow-bento: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);

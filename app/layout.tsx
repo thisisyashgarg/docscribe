@@ -1,15 +1,16 @@
-import { Inter, Playfair_Display } from "next/font/google";
+import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
 });
 
-const playfair = Playfair_Display({
+const dmSerif = DM_Serif_Display({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-dm-serif",
 });
 
 export const metadata = {
@@ -25,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${dmSans.variable} ${dmSerif.variable} font-sans antialiased`}>
         <Providers>
           <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
         </Providers>
