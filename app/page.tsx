@@ -4,45 +4,31 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import RecordingInterface from "@/components/RecordingInterface";
 import { useRecording } from "@/context/RecordingContext";
-import type { SummaryData } from "@/components/SummaryPanel";
-
-const MOCK_SUMMARY: SummaryData = {
-  symptoms: [
-    "Persistent dry cough for the last 5 days",
-    "Low-grade fever (99.2°F) in the evenings",
-    "Mild fatigue and body aches",
-    "No sore throat or nasal congestion reported",
-  ],
-  diagnosis: [
-    "Upper respiratory tract infection (viral origin likely)",
-    "Rule out early bronchitis if cough worsens",
-  ],
-  prescription: [
-    "Tab. Paracetamol 500 mg — 1 tablet SOS for fever (max 3/day)",
-    "Syp. Dextromethorphan 10 ml — twice daily for cough",
-    "Steam inhalation — 10 mins, three times a day",
-    "Increase fluid intake, rest for 2–3 days",
-    "Follow-up in 5 days if symptoms persist or worsen",
-  ],
-};
+import { processConsultation } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();
   const { setAudioBlob, setPanelStatus, setSummaryData } = useRecording();
 
   const handleRecordingComplete = useCallback(
-    (blob: Blob) => {
+    async (blob: Blob) => {
       setAudioBlob(blob);
       setPanelStatus("processing");
 
       // Navigate to summary page immediately
       router.push("/summary");
 
-      // Simulate AI processing, then set ready
-      setTimeout(() => {
-        setSummaryData(MOCK_SUMMARY);
+      try {
+        const response = await processConsultation(blob);
+        const { summary } = response.data;
+        
+        setSummaryData(summary);
         setPanelStatus("ready");
-      }, 3000);
+      } catch (error) {
+        console.error("Failed to process consultation:", error);
+        alert("Sorry, there was an error processing your consultation. Please try again.");
+        setPanelStatus("idle");
+      }
     },
     [router, setAudioBlob, setPanelStatus, setSummaryData]
   );

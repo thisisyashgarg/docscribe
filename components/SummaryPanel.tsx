@@ -34,7 +34,10 @@ interface SummarySectionProps {
 }
 
 /* ---------- Summary Section Card ---------- */
-function SummarySection({ icon, title, items, delay }: SummarySectionProps) {
+function SummarySection({ icon, title, items, delay }: { icon: string; title: string; items: string; delay: number }) {
+  // Split the string into items by newline or comma
+  const itemList = items.split("\n").map(i => i.trim()).filter(i => i.length > 0);
+
   return (
     <div
       className="rounded-2xl border border-border-light bg-paper p-5 animate-fade-in-up"
@@ -47,7 +50,7 @@ function SummarySection({ icon, title, items, delay }: SummarySectionProps) {
         </h3>
       </div>
       <ul className="space-y-2">
-        {items.map((item, i) => (
+        {itemList.map((item, i) => (
           <li key={i} className="flex items-start gap-2 text-sm text-text-primary leading-relaxed">
             <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" />
             {item}
@@ -59,9 +62,9 @@ function SummarySection({ icon, title, items, delay }: SummarySectionProps) {
 }
 
 export interface SummaryData {
-  symptoms: string[];
-  diagnosis: string[];
-  prescription: string[];
+  symptoms: string;
+  diagnosis: string;
+  prescription: string;
 }
 
 export interface SummaryPanelProps {
@@ -69,25 +72,40 @@ export interface SummaryPanelProps {
   summaryData: SummaryData | null;
 }
 
+import { sendWhatsAppSummary } from "@/lib/api";
+
 /* ---------- Main Component ---------- */
 export default function SummaryPanel({ status, summaryData }: SummaryPanelProps) {
   const [countryCode, setCountryCode] = useState<string>("+91");
   const [phone, setPhone] = useState<string>("");
   const [phoneError, setPhoneError] = useState<string>("");
+  const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const selectedCountry = COUNTRY_CODES.find((c) => c.code === countryCode);
 
-  const validateAndSend = () => {
+  const validateAndSend = async () => {
     const cleaned = phone.replace(/\s/g, "");
     if (!/^\d{10}$/.test(cleaned)) {
       setPhoneError("Please enter a valid 10-digit phone number.");
       return;
     }
     setPhoneError("");
-    setSent(true);
-    setTimeout(() => setSent(false), 3000);
+    
+    if (!summaryData) return;
+
+    setIsSending(true);
+    try {
+      await sendWhatsAppSummary(countryCode + cleaned, summaryData);
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+    } catch (error) {
+      console.error("Failed to send WhatsApp message:", error);
+      setPhoneError("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -249,15 +267,24 @@ export default function SummaryPanel({ status, summaryData }: SummaryPanelProps)
               {/* Send Button */}
               <button
                 onClick={validateAndSend}
-                disabled={sent}
+                disabled={sent || isSending}
                 className={`h-11 rounded-xl px-5 text-sm font-semibold text-white transition-all cursor-pointer
                   ${
                     sent
                       ? "bg-green-500"
                       : "bg-saffron hover:bg-saffron-dark shadow-sm hover:shadow-md active:scale-[0.97]"
-                  }`}
+                  } ${isSending ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                {sent ? "✓ Sent" : "Send Summary"}
+                {isSending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Sending...
+                  </div>
+                ) : sent ? (
+                  "✓ Sent"
+                ) : (
+                  "Send Summary"
+                )}
               </button>
             </div>
 
