@@ -70,12 +70,13 @@ export interface SummaryData {
 export interface SummaryPanelProps {
   status: "idle" | "processing" | "ready";
   summaryData: SummaryData | null;
+  formattedSummary: string | null;
 }
 
 import { sendWhatsAppSummary } from "@/lib/api";
 
 /* ---------- Main Component ---------- */
-export default function SummaryPanel({ status, summaryData }: SummaryPanelProps) {
+export default function SummaryPanel({ status, summaryData, formattedSummary }: SummaryPanelProps) {
   const [countryCode, setCountryCode] = useState<string>("+91");
   const [phone, setPhone] = useState<string>("");
   const [phoneError, setPhoneError] = useState<string>("");
@@ -93,11 +94,11 @@ export default function SummaryPanel({ status, summaryData }: SummaryPanelProps)
     }
     setPhoneError("");
     
-    if (!summaryData) return;
+    if (!formattedSummary) return;
 
     setIsSending(true);
     try {
-      await sendWhatsAppSummary(countryCode + cleaned, summaryData);
+      await sendWhatsAppSummary(countryCode + cleaned, formattedSummary);
       setSent(true);
       setTimeout(() => setSent(false), 3000);
     } catch (error) {

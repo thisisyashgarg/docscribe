@@ -1,7 +1,7 @@
 "use client";
 
+import { SummaryData } from "@/components/SummaryPanel";
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { SummaryData } from "@/components/SummaryPanel";
 
 type PanelStatus = "idle" | "processing" | "ready";
 
@@ -12,6 +12,8 @@ interface RecordingContextType {
   setPanelStatus: (status: PanelStatus) => void;
   summaryData: SummaryData | null;
   setSummaryData: (data: SummaryData | null) => void;
+  formattedSummary: string | null;
+  setFormattedSummary: (data: string | null) => void;
 }
 
 const RecordingContext = createContext<RecordingContextType | undefined>(
@@ -22,6 +24,7 @@ export function RecordingProvider({ children }: { children: ReactNode }) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [panelStatus, setPanelStatus] = useState<PanelStatus>("idle");
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
+  const [formattedSummary, setFormattedSummary] = useState<string | null>(null);
 
   return (
     <RecordingContext.Provider
@@ -32,6 +35,8 @@ export function RecordingProvider({ children }: { children: ReactNode }) {
         setPanelStatus,
         summaryData,
         setSummaryData,
+        formattedSummary,
+        setFormattedSummary,
       }}
     >
       {children}

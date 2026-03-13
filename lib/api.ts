@@ -13,6 +13,7 @@ export interface SummaryResponse {
       diagnosis: string;
       prescription: string;
     };
+    formattedSummary: string;
   };
 }
 
@@ -48,7 +49,7 @@ export async function processConsultation(audioBlob: Blob): Promise<SummaryRespo
  */
 export async function sendWhatsAppSummary(
   phoneNumber: string,
-  summary: any
+  summary: string
 ): Promise<WhatsAppResponse> {
   const response = await fetch(`${BASE_URL}/api/consultation/send`, {
     method: "POST",
