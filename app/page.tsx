@@ -31,12 +31,12 @@ export default function Home() {
         setPanelStatus("idle");
       }
     },
-    [router, setAudioBlob, setPanelStatus, setSummaryData]
+    [router, setAudioBlob, setPanelStatus, setSummaryData, setFormattedSummary]
   );
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
-      <div className="w-full max-w-xl">
+    <div className="flex flex-col items-center">
+      <div className="w-full max-w-2xl">
         <RecordingInterface onRecordingComplete={handleRecordingComplete} />
       </div>
     </div>

@@ -69,53 +69,30 @@ export default function RecordingInterface({ onRecordingComplete }: RecordingInt
   };
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-[var(--radius-bento)] border border-border bg-card p-8 shadow-[var(--shadow-bento)] lg:p-12 min-h-[480px]">
+    <div className="bg-white rounded-[var(--radius-eka-lg)] shadow-[var(--shadow-eka)] p-10 flex flex-col items-center animate-fade-in-up">
       {/* Header */}
-      <div className="mb-8 text-center">
-        <h2 className="font-serif text-2xl text-indigo-deep">
-          Consultation Recorder
-        </h2>
-        <p className="mt-2 text-sm text-text-secondary">
-          Capture and transcribe doctor-patient conversations
-        </p>
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold text-eka-dark mb-3">Consultation Scribe</h2>
+        <p className="text-eka-text-secondary">Capture your patient conversation seamlessly</p>
       </div>
 
-      {/* Microphone Button */}
-      <div className="relative mb-8">
-        {/* Outer decorative rings */}
+      {/* Main Action Area */}
+      <div className="relative mb-12">
         {status === "recording" && (
-          <>
-            <div className="absolute inset-0 -m-4 rounded-full border-2 border-red-glow/20 animate-ping" />
-            <div className="absolute inset-0 -m-8 rounded-full border border-red-glow/10" />
-          </>
+          <div className="absolute inset-0 -m-6 rounded-full border-4 border-eka-primary/10 animate-ping" />
         )}
-
+        
         <button
           onClick={handleClick}
-          className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full transition-all duration-300 cursor-pointer
-          ${
-            status === "recording"
-              ? "bg-red-glow/10 border-2 border-red-glow animate-pulse-glow"
-              : "border-2 border-indigo-deep/20 bg-paper-warm hover:border-saffron hover:bg-saffron-light hover:shadow-lg"
-          }`}
-          aria-label={status === "recording" ? "Stop recording" : "Start recording"}
+          className={`relative z-10 w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl active:scale-95
+          ${status === "recording" 
+            ? "bg-white border-4 border-eka-primary" 
+            : "bg-eka-primary hover:bg-eka-primary/90"}`}
         >
           {status === "recording" ? (
-            /* Stop icon */
-            <div className="h-8 w-8 rounded-sm bg-red-glow" />
+            <div className="w-8 h-8 bg-eka-primary rounded-sm" />
           ) : (
-            /* Microphone icon */
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-indigo-deep"
-            >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
               <line x1="12" x2="12" y1="19" y2="22" />
@@ -124,85 +101,62 @@ export default function RecordingInterface({ onRecordingComplete }: RecordingInt
         </button>
       </div>
 
-      {/* Upload Option */}
-      {status === "idle" || status === "stopped" ? (
-        <div className="mb-8 animate-fade-in-up">
-          <input
-            type="file"
-            id="audio-upload"
-            accept="audio/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onRecordingComplete?.(file);
-            }}
-          />
-          <label
-            htmlFor="audio-upload"
-            className="group flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-text-primary transition-all hover:border-saffron hover:bg-saffron-light/30 cursor-pointer"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-indigo-deep group-hover:text-saffron"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" x2="12" y1="3" y2="15" />
-            </svg>
-            Upload Audio File
-          </label>
-        </div>
-      ) : null}
-
-      {/* Timer / Status */}
-      {status === "recording" ? (
-        <div className="mb-6 flex flex-col items-center gap-3 animate-fade-in-up">
-          <span className="text-3xl font-semibold tabular-nums text-red-glow">
-            {formatTime(timer)}
-          </span>
-
-          {/* Audio wave bars */}
-          <div className="flex items-end gap-1 h-8">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="w-1 rounded-full bg-red-glow/60"
-                style={{
-                  height: "100%",
-                  animation: `wave-bar 0.8s ease-in-out ${i * 0.07}s infinite`,
-                  transformOrigin: "bottom",
-                }}
-              />
-            ))}
+      {/* Timer & Status */}
+      <div className="text-center h-20">
+        {status === "recording" ? (
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-4xl font-bold text-eka-primary tabular-nums">
+              {formatTime(timer)}
+            </span>
+            <span className="text-xs uppercase tracking-widest font-semibold text-eka-primary animate-pulse">
+              Recording in progress...
+            </span>
           </div>
-
-          <span className="text-xs font-medium text-red-glow/80 uppercase tracking-wider">
-            Recording in progress
-          </span>
-        </div>
-      ) : (
-        <div className="mb-6 text-center animate-fade-in-up">
-          <p className="text-sm text-text-muted">
-            {status === "stopped"
-              ? "Recording complete. Tap to start a new session."
-              : "Tap the microphone to begin"}
+        ) : (
+          <p className="text-eka-text-secondary mt-4">
+            {status === "stopped" 
+              ? "Recording captured. Redirecting..." 
+              : "Tap the button above to start your session"}
           </p>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Subtle footer */}
-      <div className="mt-auto flex items-center gap-2 rounded-2xl bg-paper-warm px-5 py-3">
-        <span className="text-lg">🗣️</span>
-        <p className="text-xs text-text-secondary">
-          Speak naturally or <b>upload</b> your conversation
-        </p>
+      {/* Divider */}
+      <div className="w-full flex items-center gap-4 my-8">
+        <div className="h-px bg-gray-100 flex-1" />
+        <span className="text-xs font-bold text-gray-400 uppercase">OR</span>
+        <div className="h-px bg-gray-100 flex-1" />
+      </div>
+
+      {/* File Upload */}
+      <div>
+        <input
+          type="file"
+          id="audio-upload"
+          accept="audio/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onRecordingComplete?.(file);
+          }}
+        />
+        <label
+          htmlFor="audio-upload"
+          className="flex items-center gap-3 px-6 py-3 rounded-full border-2 border-eka-secondary/30 bg-eka-secondary/5 text-eka-primary font-bold transition-all hover:bg-eka-secondary/10 cursor-pointer"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" x2="12" y1="3" y2="15" />
+          </svg>
+          Upload Consultation Audio
+        </label>
+      </div>
+
+      {/* Footer Info */}
+      <div className="mt-10 flex items-center gap-3 text-eka-text-secondary text-sm bg-eka-background px-4 py-2 rounded-full">
+        <span className="text-lg">🤖</span>
+        <span>Summaries are processed locally for your privacy</span>
       </div>
     </div>
   );
