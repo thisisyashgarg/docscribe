@@ -14,6 +14,7 @@ export interface SummaryResponse {
       prescription: string;
     };
     formattedSummary: string;
+    formattedHtml: string;
   };
 }
 
@@ -49,7 +50,8 @@ export async function processConsultation(audioBlob: Blob): Promise<SummaryRespo
  */
 export async function sendEmailSummary(
   email: string,
-  summary: string
+  summary: string,
+  summaryHtml?: string
 ): Promise<ShareResponse> {
   const response = await fetch(`${BASE_URL}/api/consultation/send`, {
     method: "POST",
@@ -59,6 +61,7 @@ export async function sendEmailSummary(
     body: JSON.stringify({
       email,
       summary,
+      summaryHtml,
     }),
   });
 

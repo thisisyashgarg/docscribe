@@ -34,9 +34,10 @@ export interface SummaryPanelProps {
   status: "idle" | "processing" | "ready";
   summaryData: SummaryData | null;
   formattedSummary: string | null;
+  formattedHtml: string | null;
 }
 
-export default function SummaryPanel({ status, summaryData, formattedSummary }: SummaryPanelProps) {
+export default function SummaryPanel({ status, summaryData, formattedSummary, formattedHtml }: SummaryPanelProps) {
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
@@ -53,7 +54,7 @@ export default function SummaryPanel({ status, summaryData, formattedSummary }: 
 
     setIsSending(true);
     try {
-      await sendEmailSummary(email, formattedSummary);
+      await sendEmailSummary(email, formattedSummary, formattedHtml || undefined);
       setSent(true);
       setTimeout(() => setSent(false), 3000);
     } catch (error) {

@@ -14,6 +14,8 @@ interface RecordingContextType {
   setSummaryData: (data: SummaryData | null) => void;
   formattedSummary: string | null;
   setFormattedSummary: (data: string | null) => void;
+  formattedHtml: string | null;
+  setFormattedHtml: (data: string | null) => void;
 }
 
 const RecordingContext = createContext<RecordingContextType | undefined>(
@@ -25,6 +27,7 @@ export function RecordingProvider({ children }: { children: ReactNode }) {
   const [panelStatus, setPanelStatus] = useState<PanelStatus>("idle");
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [formattedSummary, setFormattedSummary] = useState<string | null>(null);
+  const [formattedHtml, setFormattedHtml] = useState<string | null>(null);
 
   return (
     <RecordingContext.Provider
@@ -37,6 +40,8 @@ export function RecordingProvider({ children }: { children: ReactNode }) {
         setSummaryData,
         formattedSummary,
         setFormattedSummary,
+        formattedHtml,
+        setFormattedHtml,
       }}
     >
       {children}

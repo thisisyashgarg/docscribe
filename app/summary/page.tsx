@@ -6,7 +6,7 @@ import { useRecording } from "@/context/RecordingContext";
 
 export default function SummaryPage() {
   const router = useRouter();
-  const { panelStatus, summaryData, formattedSummary } = useRecording();
+  const { panelStatus, summaryData, formattedSummary, formattedHtml } = useRecording();
 
   return (
     <div className="flex flex-col items-center">
@@ -24,7 +24,12 @@ export default function SummaryPage() {
       </div>
 
       <div className="w-full max-w-4xl">
-        <SummaryPanel status={panelStatus} summaryData={summaryData} formattedSummary={formattedSummary} />
+        <SummaryPanel 
+          status={panelStatus} 
+          summaryData={summaryData} 
+          formattedSummary={formattedSummary} 
+          formattedHtml={formattedHtml}
+        />
       </div>
 
       <div className="mt-12 text-center text-eka-text-secondary/60 text-xs">

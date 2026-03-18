@@ -8,7 +8,7 @@ import { processConsultation } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();
-  const { setAudioBlob, setPanelStatus, setSummaryData, setFormattedSummary } = useRecording();
+  const { setAudioBlob, setPanelStatus, setSummaryData, setFormattedSummary, setFormattedHtml } = useRecording();
 
   const handleRecordingComplete = useCallback(
     async (blob: Blob) => {
@@ -20,10 +20,11 @@ export default function Home() {
 
       try {
         const response = await processConsultation(blob);
-        const { summary, formattedSummary } = response.data;
+        const { summary, formattedSummary, formattedHtml } = response.data;
         
         setSummaryData(summary);
         setFormattedSummary(formattedSummary);
+        setFormattedHtml(formattedHtml);
         setPanelStatus("ready");
       } catch (error) {
         console.error("Failed to process consultation:", error);
@@ -31,7 +32,7 @@ export default function Home() {
         setPanelStatus("idle");
       }
     },
-    [router, setAudioBlob, setPanelStatus, setSummaryData, setFormattedSummary]
+    [router, setAudioBlob, setPanelStatus, setSummaryData, setFormattedSummary, setFormattedHtml]
   );
 
   return (
