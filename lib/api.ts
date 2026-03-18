@@ -17,7 +17,7 @@ export interface SummaryResponse {
   };
 }
 
-export interface WhatsAppResponse {
+export interface ShareResponse {
   success: boolean;
   data: {
     message: string;
@@ -45,19 +45,19 @@ export async function processConsultation(audioBlob: Blob): Promise<SummaryRespo
 }
 
 /**
- * Sends a medical summary to a phone number via WhatsApp.
+ * Sends a medical summary to an email address.
  */
-export async function sendWhatsAppSummary(
-  phoneNumber: string,
+export async function sendEmailSummary(
+  email: string,
   summary: string
-): Promise<WhatsAppResponse> {
+): Promise<ShareResponse> {
   const response = await fetch(`${BASE_URL}/api/consultation/send`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      phoneNumber,
+      email,
       summary,
     }),
   });

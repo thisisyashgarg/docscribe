@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { sendWhatsAppSummary } from "@/lib/api";
-
-const COUNTRY_CODES = [
-  { code: "+91", flag: "🇮🇳", label: "India" },
-  { code: "+1", flag: "🇺🇸", label: "USA" },
-  { code: "+44", flag: "🇬🇧", label: "UK" },
-  { code: "+971", flag: "🇦🇪", label: "UAE" },
-  { code: "+65", flag: "🇸🇬", label: "Singapore" },
-  { code: "+61", flag: "🇦🇺", label: "Australia" },
-];
+import { sendEmailSummary } from "@/lib/api";
 
 function SummarySection({ icon, title, items }: { icon: string; title: string; items: string }) {
   const itemList = items.split("\n").map(i => i.trim()).filter(i => i.length > 0);
@@ -46,33 +37,28 @@ export interface SummaryPanelProps {
 }
 
 export default function SummaryPanel({ status, summaryData, formattedSummary }: SummaryPanelProps) {
-  const [countryCode, setCountryCode] = useState<string>("+91");
-  const [phone, setPhone] = useState<string>("");
-  const [phoneError, setPhoneError] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const selectedCountry = COUNTRY_CODES.find((c) => c.code === countryCode);
 
   const validateAndSend = async () => {
-    const cleaned = phone.replace(/\s/g, "");
-    if (!/^\d{10}$/.test(cleaned)) {
-      setPhoneError("Please enter a valid 10-digit phone number.");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Please enter a valid email address.");
       return;
     }
-    setPhoneError("");
+    setEmailError("");
     
     if (!formattedSummary) return;
 
     setIsSending(true);
     try {
-      await sendWhatsAppSummary(countryCode + cleaned, formattedSummary);
+      await sendEmailSummary(email, formattedSummary);
       setSent(true);
       setTimeout(() => setSent(false), 3000);
     } catch (error) {
-      console.error("Failed to send WhatsApp message:", error);
-      setPhoneError("Failed to send message. Please try again.");
+      console.error("Failed to send email:", error);
+      setEmailError("Failed to send email. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -116,45 +102,18 @@ export default function SummaryPanel({ status, summaryData, formattedSummary }: 
 
           <div className="h-px bg-gray-100 my-8" />
 
-          {/* WhatsApp Action */}
+          {/* Email Action */}
           <div className="bg-eka-primary/5 rounded-[var(--radius-eka)] p-6">
             <h3 className="text-eka-dark font-bold mb-4 flex items-center gap-2">
-              <span className="text-lg">📲</span> Share with Patient
+              <span className="text-lg">📧</span> Share with Patient
             </h3>
             
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative">
-                <button 
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="h-12 px-4 rounded-xl border-2 border-eka-secondary/30 bg-white flex items-center gap-2 font-bold text-eka-dark hover:border-eka-primary transition-all whitespace-nowrap"
-                >
-                  <span>{selectedCountry?.flag}</span>
-                  <span>{countryCode}</span>
-                </button>
-                {dropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 z-50 bg-white border-2 border-eka-secondary/20 rounded-xl shadow-xl p-2 w-48">
-                    {COUNTRY_CODES.map((c) => (
-                      <button
-                        key={c.code}
-                        onClick={() => {
-                          setCountryCode(c.code);
-                          setDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-eka-primary/5 transition-colors flex items-center justify-between"
-                      >
-                        <span className="text-sm font-medium">{c.label}</span>
-                        <span className="text-xs text-eka-primary font-bold">{c.code}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Patient's Mobile Number"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Patient's Email Address"
                 className="h-12 flex-1 px-4 rounded-xl border-2 border-eka-secondary/30 focus:border-eka-primary focus:ring-4 focus:ring-eka-primary/10 outline-none transition-all font-medium"
               />
 
@@ -165,10 +124,10 @@ export default function SummaryPanel({ status, summaryData, formattedSummary }: 
                   ${sent ? "bg-eka-success" : "bg-eka-primary hover:bg-eka-primary/90"}
                   ${isSending ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                {isSending ? "Sending..." : sent ? "✓ Sent" : "Send on WhatsApp"}
+                {isSending ? "Sending..." : sent ? "✓ Sent" : "Send via Email"}
               </button>
             </div>
-            {phoneError && <p className="mt-3 text-red-500 text-sm font-medium">{phoneError}</p>}
+            {emailError && <p className="mt-3 text-red-500 text-sm font-medium">{emailError}</p>}
           </div>
         </div>
       )}
