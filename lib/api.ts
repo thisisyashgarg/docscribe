@@ -4,14 +4,24 @@
 
 const BASE_URL = "https://docscribe-backend.vercel.app";
 
+export interface PrescriptionItem {
+  name: string;
+  dosage: string;
+  instructions: string;
+}
+
 export interface SummaryResponse {
   success: boolean;
   data: {
     actualTranscript: string;
     summary: {
+      doctorName?: string;
+      patientName?: string;
+      patientAge?: string;
+      patientWeight?: string;
       symptoms: string;
       diagnosis: string;
-      prescription: string;
+      prescription: PrescriptionItem[];
     };
     formattedSummary: string;
     formattedHtml: string;

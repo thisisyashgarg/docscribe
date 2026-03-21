@@ -24,10 +24,20 @@ function SummarySection({ icon, title, items }: { icon: string; title: string; i
   );
 }
 
+export interface PrescriptionItem {
+  name: string;
+  dosage: string;
+  instructions: string;
+}
+
 export interface SummaryData {
+  doctorName?: string;
+  patientName?: string;
+  patientAge?: string;
+  patientWeight?: string;
   symptoms: string;
   diagnosis: string;
-  prescription: string;
+  prescription: PrescriptionItem[];
 }
 
 export interface SummaryPanelProps {
@@ -95,10 +105,50 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
 
       {status === "ready" && summaryData && (
         <div className="space-y-8">
+          {(summaryData.doctorName || summaryData.patientName || summaryData.patientAge || summaryData.patientWeight) && (
+            <div className="bg-eka-primary/5 rounded-[var(--radius-eka)] p-6">
+              <h3 className="text-eka-dark font-bold mb-4 flex items-center gap-2">
+                <span className="text-lg">📋</span> Consultation Details
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {summaryData.doctorName && (
+                  <div>
+                    <span className="text-xs text-eka-text-secondary uppercase tracking-wider font-bold block mb-1">Doctor</span>
+                    <span className="font-semibold text-eka-text-primary text-[15px]">{summaryData.doctorName.startsWith("Dr.") ? summaryData.doctorName : `Dr. ${summaryData.doctorName}`}</span>
+                  </div>
+                )}
+                {summaryData.patientName && (
+                  <div>
+                    <span className="text-xs text-eka-text-secondary uppercase tracking-wider font-bold block mb-1">Patient</span>
+                    <span className="font-semibold text-eka-text-primary text-[15px]">{summaryData.patientName}</span>
+                  </div>
+                )}
+                {summaryData.patientAge && (
+                  <div>
+                    <span className="text-xs text-eka-text-secondary uppercase tracking-wider font-bold block mb-1">Age</span>
+                    <span className="font-semibold text-eka-text-primary text-[15px]">{summaryData.patientAge}</span>
+                  </div>
+                )}
+                {summaryData.patientWeight && (
+                  <div>
+                    <span className="text-xs text-eka-text-secondary uppercase tracking-wider font-bold block mb-1">Weight</span>
+                    <span className="font-semibold text-eka-text-primary text-[15px]">{summaryData.patientWeight}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-6">
             <SummarySection icon="🩺" title="Symptoms" items={summaryData.symptoms} />
             <SummarySection icon="🔬" title="Diagnosis" items={summaryData.diagnosis} />
-            <SummarySection icon="💊" title="Prescription" items={summaryData.prescription} />
+            <SummarySection 
+              icon="💊" 
+              title="Prescription" 
+              items={Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0 
+                ? summaryData.prescription.map(p => `${p.name} - ${p.dosage} (${p.instructions})`).join("\n") 
+                : "Not discussed"} 
+            />
           </div>
 
           <div className="h-px bg-gray-100 my-8" />
