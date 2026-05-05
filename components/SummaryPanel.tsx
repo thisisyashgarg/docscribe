@@ -1,20 +1,54 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { sendEmailSummary } from "@/lib/api";
 
-function SummarySection({ icon, title, items, selected, onToggle }: { icon: string; title: string; items: string; selected: boolean; onToggle: () => void }) {
+function SummarySection({
+  icon,
+  title,
+  items,
+  selected,
+  onToggle,
+  onEdit,
+}: {
+  icon: string;
+  title: string;
+  items: string;
+  selected: boolean;
+  onToggle: () => void;
+  onEdit: (value: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(items);
+
+  // Sync editValue when items prop changes (e.g. new consultation)
+  useEffect(() => {
+    setEditValue(items);
+  }, [items]);
+
   const itemList = items.split("\n").map(i => i.trim()).filter(i => i.length > 0);
+
+  const handleSave = () => {
+    onEdit(editValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(items);
+    setIsEditing(false);
+  };
 
   return (
     <div
-      onClick={onToggle}
-      className={`bg-eka-background/50 rounded-[var(--radius-eka)] p-6 border-2 cursor-pointer transition-all duration-200
+      className={`bg-eka-background/50 rounded-[var(--radius-eka)] p-6 border-2 transition-all duration-200
         ${selected ? "border-eka-primary shadow-[0_0_0_1px_rgba(var(--color-eka-primary-rgb,59,130,246),0.15)]" : "border-eka-secondary/20 hover:border-eka-secondary/40"}`}
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 shrink-0
-          ${selected ? "bg-eka-primary border-eka-primary" : "border-gray-300 bg-white"}`}
+        {/* Checkbox */}
+        <div
+          onClick={onToggle}
+          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer
+            ${selected ? "bg-eka-primary border-eka-primary" : "border-gray-300 bg-white"}`}
         >
           {selected && (
             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -23,16 +57,56 @@ function SummarySection({ icon, title, items, selected, onToggle }: { icon: stri
           )}
         </div>
         <span className="text-2xl">{icon}</span>
-        <h3 className="text-sm font-bold uppercase tracking-widest text-eka-primary">{title}</h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-eka-primary flex-1">{title}</h3>
+
+        {/* Edit / Save / Cancel buttons */}
+        {!isEditing ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+            className="text-eka-text-secondary hover:text-eka-primary transition-colors p-1.5 rounded-lg hover:bg-eka-primary/10"
+            title="Edit"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSave(); }}
+              className="text-xs font-bold text-white bg-eka-primary hover:bg-eka-primary/90 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Save
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCancel(); }}
+              className="text-xs font-bold text-eka-text-secondary hover:text-eka-dark px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
-      <ul className="space-y-3">
-        {itemList.map((item, i) => (
-          <li key={i} className="flex items-start gap-3 text-eka-text-primary">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-eka-primary shrink-0" />
-            <span className="text-[15px] leading-relaxed">{item}</span>
-          </li>
-        ))}
-      </ul>
+
+      {isEditing ? (
+        <textarea
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          rows={Math.max(3, editValue.split("\n").length + 1)}
+          className="w-full px-4 py-3 rounded-xl border-2 border-eka-primary/30 focus:border-eka-primary focus:ring-4 focus:ring-eka-primary/10 outline-none transition-all text-[15px] leading-relaxed text-eka-text-primary bg-white resize-y font-[inherit]"
+          autoFocus
+        />
+      ) : (
+        <ul className="space-y-3">
+          {itemList.map((item, i) => (
+            <li key={i} className="flex items-start gap-3 text-eka-text-primary">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-eka-primary shrink-0" />
+              <span className="text-[15px] leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -71,6 +145,24 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
     prescription: true,
   });
 
+  // Editable content — initialized from summaryData, user can override
+  const [editedSymptoms, setEditedSymptoms] = useState<string>("");
+  const [editedDiagnosis, setEditedDiagnosis] = useState<string>("");
+  const [editedPrescription, setEditedPrescription] = useState<string>("");
+
+  // Sync edited values when new summaryData arrives
+  useEffect(() => {
+    if (summaryData) {
+      setEditedSymptoms(summaryData.symptoms);
+      setEditedDiagnosis(summaryData.diagnosis);
+      setEditedPrescription(
+        Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0
+          ? summaryData.prescription.map(p => `${p.name} - ${p.dosage} (${p.instructions})`).join("\n")
+          : "Not discussed"
+      );
+    }
+  }, [summaryData]);
+
   const toggleSection = (section: string) => {
     setSelectedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
@@ -95,16 +187,13 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
     ];
 
     if (selectedSections.symptoms) {
-      textLines.push("🔹 Symptoms:", summaryData.symptoms, "");
+      textLines.push("🔹 Symptoms:", editedSymptoms, "");
     }
     if (selectedSections.diagnosis) {
-      textLines.push("🔹 Diagnosis:", summaryData.diagnosis, "");
+      textLines.push("🔹 Diagnosis:", editedDiagnosis, "");
     }
     if (selectedSections.prescription) {
-      const rxText = Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0
-        ? summaryData.prescription.map(p => `• ${p.name} - ${p.dosage} (${p.instructions})`).join("\n")
-        : "Not discussed";
-      textLines.push("🔹 Prescription:", rxText, "");
+      textLines.push("🔹 Prescription:", editedPrescription, "");
     }
 
     textLines.push("---", "This summary was generated automatically. Please consult your doctor for any clarifications.");
@@ -125,7 +214,7 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
           <h3 style="color: #4a5568; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center;">
             <span style="margin-right: 8px;">🔹</span> Symptoms
           </h3>
-          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${summaryData.symptoms}</p>
+          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${editedSymptoms.replace(/\n/g, "<br/>")}</p>
         </div>`
       : "";
 
@@ -134,7 +223,7 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
           <h3 style="color: #4a5568; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center;">
             <span style="margin-right: 8px;">🔹</span> Diagnosis
           </h3>
-          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${summaryData.diagnosis}</p>
+          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${editedDiagnosis.replace(/\n/g, "<br/>")}</p>
         </div>`
       : "";
 
@@ -144,11 +233,9 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
             <span style="margin-right: 8px;">🔹</span> Prescription
           </h3>
           <div style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">
-            ${Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0
-              ? `<ul style="margin: 0; padding-left: 20px;">
-                  ${summaryData.prescription.map(p => `<li style="margin-bottom: 4px;"><strong>${p.name}</strong> – ${p.dosage} <em>(${p.instructions})</em></li>`).join("")}
-                </ul>`
-              : `<p style="margin: 0;">Not discussed</p>`}
+            <ul style="margin: 0; padding-left: 20px;">
+              ${editedPrescription.split("\n").filter(l => l.trim()).map(l => `<li style="margin-bottom: 4px;">${l}</li>`).join("")}
+            </ul>
           </div>
         </div>`
       : "";
@@ -264,16 +351,29 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
           )}
 
           <div className="grid gap-6">
-            <SummarySection icon="🩺" title="Symptoms" items={summaryData.symptoms} selected={selectedSections.symptoms} onToggle={() => toggleSection("symptoms")} />
-            <SummarySection icon="🔬" title="Diagnosis" items={summaryData.diagnosis} selected={selectedSections.diagnosis} onToggle={() => toggleSection("diagnosis")} />
-            <SummarySection 
-              icon="💊" 
-              title="Prescription" 
-              items={Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0 
-                ? summaryData.prescription.map(p => `${p.name} - ${p.dosage} (${p.instructions})`).join("\n") 
-                : "Not discussed"}
+            <SummarySection
+              icon="🩺"
+              title="Symptoms"
+              items={editedSymptoms}
+              selected={selectedSections.symptoms}
+              onToggle={() => toggleSection("symptoms")}
+              onEdit={setEditedSymptoms}
+            />
+            <SummarySection
+              icon="🔬"
+              title="Diagnosis"
+              items={editedDiagnosis}
+              selected={selectedSections.diagnosis}
+              onToggle={() => toggleSection("diagnosis")}
+              onEdit={setEditedDiagnosis}
+            />
+            <SummarySection
+              icon="💊"
+              title="Prescription"
+              items={editedPrescription}
               selected={selectedSections.prescription}
               onToggle={() => toggleSection("prescription")}
+              onEdit={setEditedPrescription}
             />
           </div>
 
