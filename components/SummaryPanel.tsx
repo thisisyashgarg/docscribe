@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { sendEmailSummary } from "@/lib/api";
 
-function SummarySection({ icon, title, items }: { icon: string; title: string; items: string }) {
+function SummarySection({ icon, title, items, selected, onToggle }: { icon: string; title: string; items: string; selected: boolean; onToggle: () => void }) {
   const itemList = items.split("\n").map(i => i.trim()).filter(i => i.length > 0);
 
   return (
-    <div className="bg-eka-background/50 rounded-[var(--radius-eka)] p-6 border border-eka-secondary/20">
+    <div
+      onClick={onToggle}
+      className={`bg-eka-background/50 rounded-[var(--radius-eka)] p-6 border-2 cursor-pointer transition-all duration-200
+        ${selected ? "border-eka-primary shadow-[0_0_0_1px_rgba(var(--color-eka-primary-rgb,59,130,246),0.15)]" : "border-eka-secondary/20 hover:border-eka-secondary/40"}`}
+    >
       <div className="flex items-center gap-3 mb-4">
+        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 shrink-0
+          ${selected ? "bg-eka-primary border-eka-primary" : "border-gray-300 bg-white"}`}
+        >
+          {selected && (
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
         <span className="text-2xl">{icon}</span>
         <h3 className="text-sm font-bold uppercase tracking-widest text-eka-primary">{title}</h3>
       </div>
@@ -52,19 +65,130 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
   const [emailError, setEmailError] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [selectedSections, setSelectedSections] = useState<Record<string, boolean>>({
+    symptoms: true,
+    diagnosis: true,
+    prescription: true,
+  });
+
+  const toggleSection = (section: string) => {
+    setSelectedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const anySelected = useMemo(
+    () => Object.values(selectedSections).some(Boolean),
+    [selectedSections]
+  );
+
+  const buildFilteredContent = () => {
+    if (!summaryData) return { text: "", html: "" };
+
+    // ── Plain-text version ──
+    const textLines: (string | undefined)[] = [
+      "🏥 Medical Consultation Summary",
+      "",
+      summaryData.doctorName ? `👨‍⚕️ Doctor: ${summaryData.doctorName}` : undefined,
+      summaryData.patientName ? `👤 Patient: ${summaryData.patientName}` : undefined,
+      summaryData.patientAge ? `⏳ Age: ${summaryData.patientAge}` : undefined,
+      summaryData.patientWeight ? `⚖️ Weight: ${summaryData.patientWeight}` : undefined,
+      (summaryData.doctorName || summaryData.patientName || summaryData.patientAge || summaryData.patientWeight) ? "" : undefined,
+    ];
+
+    if (selectedSections.symptoms) {
+      textLines.push("🔹 Symptoms:", summaryData.symptoms, "");
+    }
+    if (selectedSections.diagnosis) {
+      textLines.push("🔹 Diagnosis:", summaryData.diagnosis, "");
+    }
+    if (selectedSections.prescription) {
+      const rxText = Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0
+        ? summaryData.prescription.map(p => `• ${p.name} - ${p.dosage} (${p.instructions})`).join("\n")
+        : "Not discussed";
+      textLines.push("🔹 Prescription:", rxText, "");
+    }
+
+    textLines.push("---", "This summary was generated automatically. Please consult your doctor for any clarifications.");
+    const text = textLines.filter(l => l !== undefined).join("\n");
+
+    // ── Styled HTML version (matches backend formatter) ──
+    const detailsBlock = (summaryData.doctorName || summaryData.patientName || summaryData.patientAge || summaryData.patientWeight)
+      ? `<div style="margin-bottom: 20px; background-color: #f0f4f8; padding: 12px; border-radius: 6px; border-left: 4px solid #3182ce;">
+          ${summaryData.doctorName ? `<p style="margin: 0 0 8px 0; font-weight: 500; display: flex; align-items: center;"><span style="margin-right: 8px;">👨‍⚕️</span> <strong>Doctor:</strong>&nbsp;${summaryData.doctorName}</p>` : ""}
+          ${summaryData.patientName ? `<p style="margin: 0 0 8px 0; font-weight: 500; display: flex; align-items: center;"><span style="margin-right: 8px;">👤</span> <strong>Patient:</strong>&nbsp;${summaryData.patientName}</p>` : ""}
+          ${summaryData.patientAge ? `<p style="margin: 0 0 8px 0; font-weight: 500; display: flex; align-items: center;"><span style="margin-right: 8px;">⏳</span> <strong>Age:</strong>&nbsp;${summaryData.patientAge}</p>` : ""}
+          ${summaryData.patientWeight ? `<p style="margin: 0; font-weight: 500; display: flex; align-items: center;"><span style="margin-right: 8px;">⚖️</span> <strong>Weight:</strong>&nbsp;${summaryData.patientWeight}</p>` : ""}
+        </div>`
+      : "";
+
+    const symptomsBlock = selectedSections.symptoms
+      ? `<div style="margin-bottom: 20px;">
+          <h3 style="color: #4a5568; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center;">
+            <span style="margin-right: 8px;">🔹</span> Symptoms
+          </h3>
+          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${summaryData.symptoms}</p>
+        </div>`
+      : "";
+
+    const diagnosisBlock = selectedSections.diagnosis
+      ? `<div style="margin-bottom: 20px;">
+          <h3 style="color: #4a5568; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center;">
+            <span style="margin-right: 8px;">🔹</span> Diagnosis
+          </h3>
+          <p style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">${summaryData.diagnosis}</p>
+        </div>`
+      : "";
+
+    const prescriptionBlock = selectedSections.prescription
+      ? `<div style="margin-bottom: 24px;">
+          <h3 style="color: #4a5568; margin-bottom: 8px; font-size: 1.1em; display: flex; align-items: center;">
+            <span style="margin-right: 8px;">🔹</span> Prescription
+          </h3>
+          <div style="background-color: #f7fafc; padding: 12px; border-radius: 6px; margin: 0;">
+            ${Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0
+              ? `<ul style="margin: 0; padding-left: 20px;">
+                  ${summaryData.prescription.map(p => `<li style="margin-bottom: 4px;"><strong>${p.name}</strong> – ${p.dosage} <em>(${p.instructions})</em></li>`).join("")}
+                </ul>`
+              : `<p style="margin: 0;">Not discussed</p>`}
+          </div>
+        </div>`
+      : "";
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; line-height: 1.6; color: #1a202c;">
+        <h2 style="color: #2b6cb0; border-bottom: 2px solid #3182ce; padding-bottom: 12px; margin-top: 0; display: flex; align-items: center;">
+          <span style="margin-right: 8px;">🏥</span> Medical Consultation Summary
+        </h2>
+        ${detailsBlock}
+        ${symptomsBlock}
+        ${diagnosisBlock}
+        ${prescriptionBlock}
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+        <p style="font-style: italic; color: #718096; font-size: 0.85em; text-align: center; margin: 0;">
+          This summary was generated automatically. Please consult your doctor for any clarifications.
+        </p>
+      </div>
+    `;
+
+    return { text, html };
+  };
 
   const validateAndSend = async () => {
+    if (!anySelected) {
+      setEmailError("Please select at least one section to send.");
+      return;
+    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
     setEmailError("");
-    
-    if (!formattedSummary) return;
+
+    const { text, html } = buildFilteredContent();
+    if (!text) return;
 
     setIsSending(true);
     try {
-      await sendEmailSummary(email, formattedSummary, formattedHtml || undefined);
+      await sendEmailSummary(email, text, html || undefined);
       setSent(true);
       setTimeout(() => setSent(false), 3000);
     } catch (error) {
@@ -140,14 +264,16 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
           )}
 
           <div className="grid gap-6">
-            <SummarySection icon="🩺" title="Symptoms" items={summaryData.symptoms} />
-            <SummarySection icon="🔬" title="Diagnosis" items={summaryData.diagnosis} />
+            <SummarySection icon="🩺" title="Symptoms" items={summaryData.symptoms} selected={selectedSections.symptoms} onToggle={() => toggleSection("symptoms")} />
+            <SummarySection icon="🔬" title="Diagnosis" items={summaryData.diagnosis} selected={selectedSections.diagnosis} onToggle={() => toggleSection("diagnosis")} />
             <SummarySection 
               icon="💊" 
               title="Prescription" 
               items={Array.isArray(summaryData.prescription) && summaryData.prescription.length > 0 
                 ? summaryData.prescription.map(p => `${p.name} - ${p.dosage} (${p.instructions})`).join("\n") 
-                : "Not discussed"} 
+                : "Not discussed"}
+              selected={selectedSections.prescription}
+              onToggle={() => toggleSection("prescription")}
             />
           </div>
 
@@ -170,12 +296,12 @@ export default function SummaryPanel({ status, summaryData, formattedSummary, fo
 
               <button 
                 onClick={validateAndSend} 
-                disabled={sent || isSending}
+                disabled={sent || isSending || !anySelected}
                 className={`h-12 px-8 rounded-xl font-bold text-white transition-all shadow-lg active:scale-95
-                  ${sent ? "bg-eka-success" : "bg-eka-primary hover:bg-eka-primary/90"}
+                  ${sent ? "bg-eka-success" : !anySelected ? "bg-gray-300 cursor-not-allowed" : "bg-eka-primary hover:bg-eka-primary/90"}
                   ${isSending ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                {isSending ? "Sending..." : sent ? "✓ Sent" : "Send via Email"}
+                {isSending ? "Sending..." : sent ? "✓ Sent" : !anySelected ? "Select sections" : "Send via Email"}
               </button>
             </div>
             {emailError && <p className="mt-3 text-red-500 text-sm font-medium">{emailError}</p>}
