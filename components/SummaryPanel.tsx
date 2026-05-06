@@ -21,7 +21,6 @@ function SummarySection({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(items);
 
-  // Sync editValue when items prop changes (e.g. new consultation)
   useEffect(() => {
     setEditValue(items);
   }, [items]);
@@ -40,73 +39,93 @@ function SummarySection({
 
   return (
     <div
-      className={`bg-eka-background/50 rounded-[var(--radius-eka)] p-6 border-2 transition-all duration-200
-        ${selected ? "border-eka-primary shadow-[0_0_0_1px_rgba(var(--color-eka-primary-rgb,59,130,246),0.15)]" : "border-eka-secondary/20 hover:border-eka-secondary/40"}`}
+      className={`group relative overflow-hidden rounded-2xl transition-all duration-300 ease-out
+        ${selected
+          ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_8px_24px_rgba(80,66,189,0.08)] ring-1 ring-eka-primary/20"
+          : "bg-gray-50/80 shadow-none ring-1 ring-gray-200/60 opacity-60 hover:opacity-80"
+        }`}
     >
-      <div className="flex items-center gap-3 mb-4">
-        {/* Checkbox */}
-        <div
-          onClick={onToggle}
-          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer
-            ${selected ? "bg-eka-primary border-eka-primary" : "border-gray-300 bg-white"}`}
-        >
-          {selected && (
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </div>
-        <span className="text-2xl">{icon}</span>
-        <h3 className="text-sm font-bold uppercase tracking-widest text-eka-primary flex-1">{title}</h3>
+      {/* Accent bar on the left */}
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300
+          ${selected ? "bg-eka-primary" : "bg-gray-300"}`}
+      />
 
-        {/* Edit / Save / Cancel buttons */}
-        {!isEditing ? (
+      <div className="pl-5 pr-5 py-5 sm:pl-6 sm:pr-6 sm:py-6">
+        {/* Header row */}
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-xl">{icon}</span>
+          <h3 className={`text-[13px] font-semibold uppercase tracking-[0.08em] flex-1 transition-colors duration-200
+            ${selected ? "text-eka-dark" : "text-gray-400"}`}>
+            {title}
+          </h3>
+
+          {/* Action buttons — edit or save/cancel */}
+          {!isEditing ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+              className="opacity-0 group-hover:opacity-100 text-eka-text-secondary hover:text-eka-primary transition-all duration-200 p-1.5 rounded-lg hover:bg-eka-primary/8"
+              title="Edit"
+            >
+              <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleSave(); }}
+                className="text-[12px] font-semibold text-white bg-eka-primary hover:bg-eka-primary/90 px-3.5 py-1.5 rounded-lg transition-all duration-150 shadow-sm"
+              >
+                Save
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleCancel(); }}
+                className="text-[12px] font-semibold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-all duration-150"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Toggle switch */}
           <button
-            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-            className="text-eka-text-secondary hover:text-eka-primary transition-colors p-1.5 rounded-lg hover:bg-eka-primary/10"
-            title="Edit"
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            className={`relative inline-flex h-[22px] w-[40px] shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-in-out focus:outline-none
+              ${selected ? "bg-eka-primary" : "bg-gray-300"}`}
+            role="switch"
+            aria-checked={selected}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
+            <span
+              className={`pointer-events-none inline-block h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] ring-0 transition-transform duration-300 ease-in-out transform
+                ${selected ? "translate-x-[20px]" : "translate-x-[2px]"}`}
+              style={{ marginTop: "2px" }}
+            />
           </button>
+        </div>
+
+        {/* Content */}
+        {isEditing ? (
+          <textarea
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            rows={Math.max(3, editValue.split("\n").length + 1)}
+            className="w-full px-4 py-3 rounded-xl border border-eka-primary/20 focus:border-eka-primary focus:ring-2 focus:ring-eka-primary/10 outline-none transition-all text-[14px] leading-relaxed text-eka-text-primary bg-eka-background/50 resize-y"
+            autoFocus
+          />
         ) : (
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleSave(); }}
-              className="text-xs font-bold text-white bg-eka-primary hover:bg-eka-primary/90 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Save
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleCancel(); }}
-              className="text-xs font-bold text-eka-text-secondary hover:text-eka-dark px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
+          <ul className="space-y-2.5 ml-0.5">
+            {itemList.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 text-eka-text-primary">
+                <span className={`mt-[7px] w-[5px] h-[5px] rounded-full shrink-0 transition-colors duration-200
+                  ${selected ? "bg-eka-primary/70" : "bg-gray-300"}`} />
+                <span className="text-[14px] leading-relaxed">{item}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-
-      {isEditing ? (
-        <textarea
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          rows={Math.max(3, editValue.split("\n").length + 1)}
-          className="w-full px-4 py-3 rounded-xl border-2 border-eka-primary/30 focus:border-eka-primary focus:ring-4 focus:ring-eka-primary/10 outline-none transition-all text-[15px] leading-relaxed text-eka-text-primary bg-white resize-y font-[inherit]"
-          autoFocus
-        />
-      ) : (
-        <ul className="space-y-3">
-          {itemList.map((item, i) => (
-            <li key={i} className="flex items-start gap-3 text-eka-text-primary">
-              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-eka-primary shrink-0" />
-              <span className="text-[15px] leading-relaxed">{item}</span>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
